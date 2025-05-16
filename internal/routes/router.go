@@ -15,4 +15,7 @@ func APIRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/github/callback", handlers.GitHubCallbackHandler)
 
 	mux.HandleFunc("/generate-viewer-link", handlers.GenerateViewerLinkHandler)
+
+	mux.HandleFunc("/view/", handlers.ViewerAccessHandler)
+	
 }

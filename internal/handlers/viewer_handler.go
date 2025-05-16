@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/greatdaveo/privycode-server/config"
@@ -52,4 +53,38 @@ func GenerateViewerLinkHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func ViewerAccessHandler(w http.ResponseWriter, r *http.Request) {
+	// To extract the token from the URL
+	token := strings.TrimPrefix(r.URL.Path, "/view/")
+	if token == "" {
+		http.Error(w, "Missing token: ", http.StatusBadRequest)
+		return
+	}
 
+	dbInstance := config.DB
+	var link models.ViewerLink
+
+	result := dbInstance.Where("token = ?", token).First(&link)
+	if result.Error != nil {
+		http.Error(w, "❌ Invalid or expired link", http.StatusNotFound)
+		return
+	}
+
+	// To check if the link has expired
+	if time.Now().After(link.ExpiresAt) {
+		http.Error(w, "❌ Link has expired", http.StatusForbidden)
+		return
+	}
+
+	// To check the max views (Optional)
+	if link.MaxViews > 0 && link.ViewCount >= link.MaxViews {
+		http.Error(w, "❌ View limit reached", http.StatusForbidden)
+		return
+	}
+
+	// To increase the view count
+	link.ViewCount++
+	dbInstance.Save(&link)
+
+	fmt.Fprintf(w, "✅ Access granted to repo: %s", link.RepoName)
+}
