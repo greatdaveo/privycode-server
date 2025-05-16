@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -14,7 +15,7 @@ import (
 
 type ViewerLinkRequest struct {
 	RepoName  string `json:"repo_name"`
-	ExpiresIn int    `json:"expires_in_days`
+	ExpiresIn int    `json:"expires_in_days"`
 	MaxViews  int    `json:"max_views"`
 }
 
@@ -30,7 +31,12 @@ func GenerateViewerLinkHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	token := utils.GenerateToken()
-	expiration := time.Now().Add(time.Duration(req.ExpiresIn) * 24 * time.Hour)
+	// To calculate expiring date
+	days := req.ExpiresIn
+	if days <= 0 {
+		days = 3 // to set default expiration to 3 days
+	}
+	expiration := time.Now().Add(time.Duration(days) * 24 * time.Hour)
 
 	link := models.ViewerLink{
 		RepoName:  req.RepoName,
@@ -86,5 +92,61 @@ func ViewerAccessHandler(w http.ResponseWriter, r *http.Request) {
 	link.ViewCount++
 	dbInstance.Save(&link)
 
-	fmt.Fprintf(w, "✅ Access granted to repo: %s", link.RepoName)
+	// To get the owner of the repo
+	var user models.User
+	err := dbInstance.First(&user, link.UserID).Error
+	if err != nil {
+		http.Error(w, "❌ User not found", http.StatusInternalServerError)
+		return
+	}
+
+	// To build GitHub API request
+	client := &http.Client{}
+	apiURL := fmt.Sprintf("https://api.github.com/repos/%s/%s/contents", user.GitHubUsername, link.RepoName)
+
+	// fmt.Println("GitHub API URL:", apiURL)
+
+	req, err := http.NewRequest("GET", apiURL, nil)
+	if err != nil {
+		http.Error(w, "❌ Failed to build request", http.StatusInternalServerError)
+		return
+	}
+
+	req.Header.Set("Authorization", "token "+user.GitHubToken)
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
+
+	// To send the request
+	resp, err := client.Do(req)
+	if err != nil {
+		http.Error(w, "❌ HTTP error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	// To read error response body
+	if resp.StatusCode != 200 {
+		errorBody, _ := io.ReadAll(resp.Body)
+		msg := fmt.Sprintf("❌ GitHub API error: %s\nStatus: %d", string(errorBody), resp.StatusCode)
+		http.Error(w, msg, http.StatusForbidden)
+		return
+	}
+	// To parse GitHub response
+	var contents []struct {
+		Name string `json:"name"`
+		Type string `json:"type"`
+		Path string `json:"path"`
+		URL  string `json:"url"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&contents); err != nil {
+		http.Error(w, "❌ Failed to parse GitHub response", http.StatusInternalServerError)
+		return
+	}
+
+	// To return the content list as JSON
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(contents)
+
+	// fmt.Fprintf(w, "✅ Access granted to repo: %s", link.RepoName)
 }
