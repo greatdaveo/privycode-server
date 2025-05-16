@@ -7,4 +7,5 @@ func APIRoutes(mux *http.ServeMux) {
 		w.Write([]byte("Welcome to PrivyCode 👋"))
 	})
 
+	
 }

@@ -14,9 +14,12 @@ func main() {
 	// To Connect to the DB
 	config.ConnectDB()
 
+	// For auto migrate to DB
+	// config.RunMigrations()
+
 	// To set up HTTP router
 	mux := http.NewServeMux()
-	
+
 	routes.APIRoutes(mux)
 
 	port := os.Getenv("PORT")
