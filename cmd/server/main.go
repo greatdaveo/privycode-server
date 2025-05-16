@@ -3,18 +3,32 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
+
+	"github.com/greatdaveo/privycode-server/config"
+	"github.com/greatdaveo/privycode-server/internal/routes"
 )
 
 func main() {
+
+	// To Connect to the DB
+	config.ConnectDB()
+
+	// To set up HTTP router
 	mux := http.NewServeMux()
+	
+	routes.APIRoutes(mux)
 
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Welcome to PrivyCode!!!!"))
-	})
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
 
-	log.Println("Server starting on :8080...")
-	err := http.ListenAndServe(":8080", mux)
+	log.Printf("Server starting on :%s... ✅", port)
+
+	err := http.ListenAndServe(":"+port, mux)
+
 	if err != nil {
-		log.Fatalf("Could not start sever: %v", err)
+		log.Fatalf("❌ Could not start sever: %v", err)
 	}
 }
