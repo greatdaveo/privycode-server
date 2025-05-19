@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/greatdaveo/privycode-server/config"
+	"github.com/greatdaveo/privycode-server/internal/middleware"
 	"github.com/greatdaveo/privycode-server/internal/routes"
 )
 
@@ -22,6 +23,8 @@ func main() {
 
 	routes.APIRoutes(mux)
 
+	handlerWithCORS := middleware.WithCORS(mux)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -29,7 +32,7 @@ func main() {
 
 	log.Printf("Server starting on :%s... ✅", port)
 
-	err := http.ListenAndServe(":"+port, mux)
+	err := http.ListenAndServe(":"+port, handlerWithCORS)
 
 	if err != nil {
 		log.Fatalf("❌ Could not start sever: %v", err)
