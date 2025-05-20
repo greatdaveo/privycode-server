@@ -150,3 +150,70 @@ func ViewerAccessHandler(w http.ResponseWriter, r *http.Request) {
 
 	// fmt.Fprintf(w, "✅ Access granted to repo: %s", link.RepoName)
 }
+
+func ViewFileHandler(w http.ResponseWriter, r *http.Request) {
+	segments := strings.Split(strings.TrimPrefix(r.URL.Path, "/view-files/"), "/")
+
+	if len(segments) < 1 {
+		http.Error(w, "Invalid viwer URL", http.StatusBadRequest)
+		return
+	}
+
+	token := segments[0]
+
+	fmt.Println("Extracted Token:", token)
+
+	path := r.URL.Query().Get("path")
+
+	if token == "" || path == "" {
+		http.Error(w, "❌ Missing token or path", http.StatusBadRequest)
+		return
+	}
+
+	dbInstance := config.DB
+
+	// To get the viewer link
+	var link models.ViewerLink
+	if err := dbInstance.Where("token = ?", token).First(&link).Error; err != nil {
+		http.Error(w, "❌ Invalid link", http.StatusNotFound)
+		return
+	}
+
+	// To check expiration
+	if time.Now().After(link.ExpiresAt) {
+		http.Error(w, "❌ Link expired", http.StatusForbidden)
+		return
+	}
+	// To check view limits
+	if link.MaxViews > 0 && link.ViewCount >= link.MaxViews {
+		http.Error(w, "❌ View limit reached", http.StatusForbidden)
+		return
+	}
+
+	var user models.User
+	if err := dbInstance.First(&user, link.UserID).Error; err != nil {
+		http.Error(w, "❌ User not found", http.StatusInternalServerError)
+		return
+	}
+
+	// To request file content from GitHub
+	apiURL := fmt.Sprintf("https://api.github.com/repos/%s/%s/contents/%s", user.GitHubUsername, link.RepoName, path)
+	req, _ := http.NewRequest("GET", apiURL, nil)
+	req.Header.Set("Authorization", "token "+user.GitHubToken)
+	req.Header.Set("Accept", "application/vnd.github.v3.raw")
+
+	client := &http.Client{}
+	response, err := client.Do(req)
+
+	if err != nil || response.StatusCode != 200 {
+		body, _ := io.ReadAll(response.Body)
+		http.Error(w, fmt.Sprintf("❌ GitHub error: %s", body), response.StatusCode)
+		return
+	}
+
+	defer response.Body.Close()
+
+	content, _ := io.ReadAll(response.Body)
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write(content)
+}
