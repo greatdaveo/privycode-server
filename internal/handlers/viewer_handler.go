@@ -217,3 +217,56 @@ func ViewFileHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.Write(content)
 }
+
+func ViewerFolderHandler(w http.ResponseWriter, r *http.Request) {
+	token := strings.TrimPrefix(r.URL.Path, "/view-folder/")
+	if token == "" {
+		http.Error(w, "Missing token", http.StatusBadRequest)
+		return
+	}
+	
+	// fmt.Println("Folder View Token:", token)
+
+	path := r.URL.Query().Get("path")
+
+	dbInstance := config.DB
+
+	// To look up viewer link
+	var link models.ViewerLink
+	if err := dbInstance.Where("token = ?", token).First(&link).Error; err != nil {
+		http.Error(w, "Invalid viewer link", http.StatusNotFound)
+		return
+	}
+
+	// To check expiration and view count
+	if time.Now().After(link.ExpiresAt) || (link.MaxViews > 0 && link.ViewCount >= link.MaxViews) {
+		http.Error(w, "Link expired or view limit reached", http.StatusForbidden)
+		return
+	}
+
+	// To get the user
+	var user models.User
+	if err := dbInstance.First(&user, link.UserID).Error; err != nil {
+		http.Error(w, "User not found", http.StatusInternalServerError)
+		return
+	}
+
+	// To build the GitHub API folder URL
+	apiURL := fmt.Sprintf("https://api.github.com/repos/%s/%s/contents/%s", user.GitHubUsername, link.RepoName, path)
+	req, _ := http.NewRequest("GET", apiURL, nil)
+	req.Header.Set("Authorization", "token "+user.GitHubToken)
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil || resp.StatusCode != 200 {
+		body, _ := io.ReadAll(resp.Body)
+		http.Error(w, fmt.Sprintf("GitHub folder fetch error: %s", body), resp.StatusCode)
+		return
+	}
+	defer resp.Body.Close()
+
+	// To return the folder content
+	w.Header().Set("Content-Type", "application/json")
+	io.Copy(w, resp.Body)
+}
