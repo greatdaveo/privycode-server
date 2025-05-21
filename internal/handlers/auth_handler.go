@@ -82,7 +82,7 @@ func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		frontendURL = "http://localhost:5173"
 	}
 
-	redirectURL := fmt.Sprintf("%s/dashboard", frontendURL)
+	redirectURL := fmt.Sprintf("%s/dashboard?token=%s", frontendURL, token.AccessToken)
 
 	fmt.Printf("Redirecting user to: %s\n", redirectURL)
 	http.Redirect(w, r, redirectURL, http.StatusFound)

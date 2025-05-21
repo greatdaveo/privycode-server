@@ -13,6 +13,7 @@ func APIRoutes(mux *http.ServeMux) {
 	})
 
 	mux.HandleFunc("/github/login", handlers.GitHubLoginHandler)
+	mux.HandleFunc("/dashboard", middleware.AuthMiddleware(handlers.DashboardHandler))
 	mux.HandleFunc("/github/callback", handlers.GitHubCallbackHandler)
 
 	mux.HandleFunc("/generate-viewer-link", middleware.AuthMiddleware(handlers.GenerateViewerLinkHandler))
