@@ -224,7 +224,7 @@ func ViewerFolderHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Missing token", http.StatusBadRequest)
 		return
 	}
-	
+
 	// fmt.Println("Folder View Token:", token)
 
 	path := r.URL.Query().Get("path")
@@ -269,4 +269,31 @@ func ViewerFolderHandler(w http.ResponseWriter, r *http.Request) {
 	// To return the folder content
 	w.Header().Set("Content-Type", "application/json")
 	io.Copy(w, resp.Body)
+}
+
+func ViewUserInfoHandler(w http.ResponseWriter, r *http.Request) {
+	token := strings.TrimPrefix(r.URL.Path, "/view-info/")
+	if token == "" {
+		http.Error(w, "Missing token", http.StatusBadRequest)
+		return
+	}
+
+	var link models.ViewerLink
+	if err := config.DB.Where("token = ?", token).First(&link).Error; err != nil {
+		http.Error(w, "Invalid or expired link", http.StatusNotFound)
+		return
+	}
+
+	var user models.User
+	if err := config.DB.First(&user, link.UserID).Error; err != nil {
+		http.Error(w, "User not found", http.StatusInternalServerError)
+		return
+	}
+
+	// To return the user GitHub username and repo name
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"github_username": user.GitHubUsername,
+		"repo_name":       link.RepoName,
+	})
 }

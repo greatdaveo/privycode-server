@@ -20,4 +20,5 @@ func APIRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/view-files/", handlers.ViewFileHandler)
 	mux.HandleFunc("/view-folder/", handlers.ViewerFolderHandler)
 
+	mux.HandleFunc("/view-info/", handlers.ViewUserInfoHandler)
 }
