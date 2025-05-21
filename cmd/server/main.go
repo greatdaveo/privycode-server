@@ -16,7 +16,7 @@ func main() {
 	config.ConnectDB()
 
 	// For auto migrate to DB
-	config.RunMigrations()
+	// config.RunMigrations()
 
 	// To set up HTTP router
 	mux := http.NewServeMux()
