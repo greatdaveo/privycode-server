@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 
+	"github.com/google/uuid"
 	"github.com/greatdaveo/privycode-server/config"
 	"github.com/greatdaveo/privycode-server/internal/github"
 	"github.com/greatdaveo/privycode-server/internal/models"
@@ -12,7 +14,8 @@ import (
 )
 
 func GitHubLoginHandler(w http.ResponseWriter, r *http.Request) {
-	url := github.GetAuthURL("privycode")
+	state := uuid.New().String()
+	url := github.GetAuthURL(state)
 	http.Redirect(w, r, url, http.StatusFound)
 }
 
@@ -70,5 +73,19 @@ func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Welcome back, %s!", githubUser.Login)
 	} else {
 		http.Error(w, "❌ Database error: "+err.Error(), http.StatusInternalServerError)
+		return
 	}
+
+	// To redirect to the frontend dashboard
+	frontendURL := os.Getenv("FRONTEND_URL")
+
+	if frontendURL == "" {
+		frontendURL = "http://localhost:5173"
+	}
+
+	redirectURL := fmt.Sprintf("%s/dashboard", frontendURL)
+
+	fmt.Printf("Redirecting user to: %s\n", redirectURL)
+	http.Redirect(w, r, redirectURL, http.StatusFound)
+
 }
