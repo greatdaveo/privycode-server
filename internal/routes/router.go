@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/greatdaveo/privycode-server/internal/handlers"
+	"github.com/greatdaveo/privycode-server/internal/middleware"
 )
 
 func APIRoutes(mux *http.ServeMux) {
@@ -14,7 +15,7 @@ func APIRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/github/login", handlers.GitHubLoginHandler)
 	mux.HandleFunc("/github/callback", handlers.GitHubCallbackHandler)
 
-	mux.HandleFunc("/generate-viewer-link", handlers.GenerateViewerLinkHandler)
+	mux.HandleFunc("/generate-viewer-link", middleware.AuthMiddleware(handlers.GenerateViewerLinkHandler))
 
 	mux.HandleFunc("/view/", handlers.ViewerAccessHandler)
 	mux.HandleFunc("/view-files/", handlers.ViewFileHandler)

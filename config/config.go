@@ -53,6 +53,8 @@ func RunMigrations() {
 		log.Fatalf("❌ Failed to migrate: %v", err)
 	}
 
+	// DB.Migrator().DropTable(&models.User{}, &models.ViewerLink{})
+
 	fmt.Println("Migrations completed successfully ✅")
 
 }

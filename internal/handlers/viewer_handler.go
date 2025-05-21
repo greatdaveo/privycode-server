@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/greatdaveo/privycode-server/config"
+	"github.com/greatdaveo/privycode-server/internal/middleware"
 	"github.com/greatdaveo/privycode-server/internal/models"
 	"github.com/greatdaveo/privycode-server/internal/utils"
 )
@@ -21,7 +22,10 @@ type ViewerLinkRequest struct {
 
 func GenerateViewerLinkHandler(w http.ResponseWriter, r *http.Request) {
 	// Temp User ID
-	userID := uint(1)
+	user := middleware.GetUserFromContext(r)
+	if user == nil {
+		http.Error(w, "❌ Unauthorized", http.StatusUnauthorized)
+	}
 
 	var req ViewerLinkRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -40,7 +44,7 @@ func GenerateViewerLinkHandler(w http.ResponseWriter, r *http.Request) {
 
 	link := models.ViewerLink{
 		RepoName:  req.RepoName,
-		UserID:    userID,
+		UserID:    user.ID,
 		Token:     token,
 		ExpiresAt: expiration,
 		MaxViews:  req.MaxViews,

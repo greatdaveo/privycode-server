@@ -67,13 +67,12 @@ func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) {
 			GitHubToken:    token.AccessToken,
 		}
 
-		dbInstance.Create(&newUser)
-		fmt.Fprintf(w, "New User Created: , %s!", githubUser.Login)
-	} else if err == nil {
-		fmt.Fprintf(w, "Welcome back, %s!", githubUser.Login)
-	} else {
-		http.Error(w, "❌ Database error: "+err.Error(), http.StatusInternalServerError)
-		return
+		if err := dbInstance.Create(&newUser).Error; err != nil {
+			http.Error(w, "❌ Failed to create user", http.StatusInternalServerError)
+			return
+		}
+
+		// fmt.Fprintf(w, "New User Created: , %s!", githubUser.Login)
 	}
 
 	// To redirect to the frontend dashboard
