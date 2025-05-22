@@ -37,7 +37,7 @@ func ConnectDB() {
 	}
 
 	if err := sqlDB.Ping(); err != nil {
-		log.Fatalf("❌ Error pingin DB: %v", err)
+		log.Fatalf("❌ Error pinging DB: %v", err)
 	}
 
 	DB = database

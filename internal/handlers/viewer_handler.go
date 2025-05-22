@@ -23,8 +23,11 @@ type ViewerLinkRequest struct {
 func GenerateViewerLinkHandler(w http.ResponseWriter, r *http.Request) {
 	// Temp User ID
 	user := middleware.GetUserFromContext(r)
+	// fmt.Println("User: ", user)
+
 	if user == nil {
 		http.Error(w, "❌ Unauthorized", http.StatusUnauthorized)
+		return
 	}
 
 	var req ViewerLinkRequest
@@ -165,7 +168,7 @@ func ViewFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	token := segments[0]
 
-	fmt.Println("Extracted Token:", token)
+	// fmt.Println("Extracted Token:", token)
 
 	path := r.URL.Query().Get("path")
 

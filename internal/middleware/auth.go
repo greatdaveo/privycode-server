@@ -24,12 +24,16 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 		token := strings.TrimPrefix(authHeader, "Bearer ")
 		var user models.User
+		// fmt.Println("user", user)
+
 		if err := config.DB.Where("git_hub_token = ?", token).First(&user).Error; err != nil {
+			// log.Println("❌ Auth failed:", err)
 			http.Error(w, "❌ Unauthorized: Invalid token", http.StatusUnauthorized)
+			return
 		}
 
 		ctx := context.WithValue(r.Context(), userCtxKey, &user)
-		next(w, r.WithContext(ctx))
+		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 }
 
