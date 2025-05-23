@@ -18,6 +18,8 @@ func APIRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/me", middleware.AuthMiddleware(handlers.MeHandler))
 
 	mux.HandleFunc("/generate-viewer-link", middleware.AuthMiddleware(handlers.GenerateViewerLinkHandler))
+	mux.HandleFunc("/update-link/", middleware.AuthMiddleware(handlers.UpdateViewerLinkHandler))
+	mux.HandleFunc("/delete-link/", middleware.AuthMiddleware(handlers.DeleteViewerLinkHandler))
 
 	mux.HandleFunc("/view/", handlers.ViewerAccessHandler)
 	mux.HandleFunc("/view-files/", handlers.ViewFileHandler)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -162,7 +163,7 @@ func ViewFileHandler(w http.ResponseWriter, r *http.Request) {
 	segments := strings.Split(strings.TrimPrefix(r.URL.Path, "/view-files/"), "/")
 
 	if len(segments) < 1 {
-		http.Error(w, "Invalid viwer URL", http.StatusBadRequest)
+		http.Error(w, "Invalid viewer URL", http.StatusBadRequest)
 		return
 	}
 
@@ -302,5 +303,77 @@ func ViewUserInfoHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{
 		"github_username": user.GitHubUsername,
 		"repo_name":       link.RepoName,
+	})
+}
+
+func UpdateViewerLinkHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimPrefix(r.URL.Path, "/update-link/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "❌ Invalid ID", http.StatusBadRequest)
+		return
+	}
+
+	var link models.ViewerLink
+
+	db := config.DB
+	if err := db.First(&link, id).Error; err != nil {
+		http.Error(w, "❌ Link not found", http.StatusNotFound)
+		return
+	}
+
+	var payload struct {
+		ExpiresInDays int `json:"expires_in_days"`
+		MaxViews      int `json:"max_views"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, "❌ Invalid JSON payload", http.StatusBadRequest)
+		return
+	}
+
+	if payload.ExpiresInDays > 0 {
+		link.ExpiresAt = time.Now().Add(time.Duration(payload.ExpiresInDays) * 24 * time.Hour)
+	}
+
+	if payload.MaxViews > 0 {
+		link.MaxViews = payload.MaxViews
+	}
+
+	if err := db.Save(&link).Error; err != nil {
+		http.Error(w, "❌ Could not update link", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Viewer link updated successfully",
+	})
+}
+
+func DeleteViewerLinkHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimPrefix(r.URL.Path, "/delete-link/")
+	id, err := strconv.Atoi(idStr)
+
+	if err != nil {
+		http.Error(w, "❌ Invalid ID", http.StatusBadRequest)
+		return
+	}
+
+	var link models.ViewerLink
+	db := config.DB
+	if err := db.First(&link, id).Error; err != nil {
+		http.Error(w, "❌ Link not found", http.StatusNotFound)
+		return
+	}
+
+	if err := db.Delete(&link).Error; err != nil {
+		http.Error(w, "❌  Could not delete link", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Viewer link deleted",
 	})
 }
