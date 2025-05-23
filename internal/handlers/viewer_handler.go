@@ -55,6 +55,20 @@ func GenerateViewerLinkHandler(w http.ResponseWriter, r *http.Request) {
 		ViewCount: 0,
 	}
 
+	// To ensure the repository exist before saving
+	apiURL := fmt.Sprintf("https://api.github.com/repos/%s/%s", user.GitHubUsername, req.RepoName)
+	reqGitHub, _ := http.NewRequest("GET", apiURL, nil)
+	reqGitHub.Header.Set("Authorization", "token "+user.GitHubToken)
+	reqGitHub.Header.Set("Accept", "application/vnd.github.v3+json")
+
+	client := &http.Client{}
+	resp, err := client.Do(reqGitHub)
+
+	if err != nil || resp.StatusCode != 200 {
+		http.Error(w, "❌ Repository not found or inaccessible", http.StatusNotFound)
+		return
+	}
+
 	if err := config.DB.Create(&link).Error; err != nil {
 		http.Error(w, "❌ Could not create viewer link", http.StatusInternalServerError)
 	}
@@ -135,8 +149,7 @@ func ViewerAccessHandler(w http.ResponseWriter, r *http.Request) {
 	// To read error response body
 	if resp.StatusCode != 200 {
 		errorBody, _ := io.ReadAll(resp.Body)
-		msg := fmt.Sprintf("❌ GitHub API error: %s\nStatus: %d", string(errorBody), resp.StatusCode)
-		http.Error(w, msg, http.StatusForbidden)
+		http.Error(w, string(errorBody), resp.StatusCode)
 		return
 	}
 	// To parse GitHub response

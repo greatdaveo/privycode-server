@@ -47,13 +47,10 @@ func ConnectDB() {
 }
 
 func RunMigrations() {
-	err := DB.AutoMigrate(&models.User{}, &models.ViewerLink{})
-
-	if err != nil {
-		log.Fatalf("❌ Failed to migrate: %v", err)
-	}
 
 	// DB.Migrator().DropTable(&models.User{}, &models.ViewerLink{})
+
+	DB.AutoMigrate(&models.User{}, &models.ViewerLink{})
 
 	fmt.Println("Migrations completed successfully ✅")
 
