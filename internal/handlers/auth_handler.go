@@ -53,6 +53,12 @@ func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// To generate a fallback email if GitHub doesn't provide the user email
+	email := githubUser.Email
+	if email == "" {
+		email = fmt.Sprintf("%s@users.noreply.github.com", githubUser.Login)
+	}
+
 	dbInstance := config.DB
 
 	// To check if user exists
@@ -62,7 +68,7 @@ func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	if err == gorm.ErrRecordNotFound {
 		// To create new user
 		newUser := models.User{
-			Email:          githubUser.Email,
+			Email:          email,
 			GitHubUsername: githubUser.Login,
 			GitHubToken:    token.AccessToken,
 		}
