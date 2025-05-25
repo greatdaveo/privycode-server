@@ -48,8 +48,6 @@ func ConnectDB() {
 
 func RunMigrations() {
 
-	// DB.Migrator().DropTable(&models.User{}, &models.ViewerLink{})
-
 	DB.AutoMigrate(&models.User{}, &models.ViewerLink{})
 
 	fmt.Println("Migrations completed successfully ✅")

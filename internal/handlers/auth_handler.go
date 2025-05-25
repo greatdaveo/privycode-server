@@ -79,18 +79,35 @@ func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// fmt.Fprintf(w, "New User Created: , %s!", githubUser.Login)
+	} else if err == nil {
+		// Optionally update GitHub Token if needed
+		existingUser.GitHubToken = token.AccessToken
+		dbInstance.Save(&existingUser)
+	} else {
+		http.Error(w, "❌ Database error: "+err.Error(), http.StatusInternalServerError)
+		return
 	}
 
-	// To redirect to the frontend dashboard
+	// To set cookie with the token
+	http.SetCookie(w, &http.Cookie{
+		Name:     "github_token",
+		Value:    token.AccessToken,
+		Path:     "/",
+		HttpOnly: false,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	// To redirect to the frontend dashboard without exposing token
 	frontendURL := os.Getenv("FRONTEND_URL")
 
 	if frontendURL == "" {
 		frontendURL = "http://localhost:5173"
 	}
 
-	redirectURL := fmt.Sprintf("%s/dashboard?token=%s", frontendURL, token.AccessToken)
+	redirectURL := fmt.Sprintf("%s/dashboard", frontendURL)
 
-	fmt.Printf("Redirecting user to: %s\n", redirectURL)
+	fmt.Printf("🔄 Redirecting user to: %s\n", redirectURL)
+
 	http.Redirect(w, r, redirectURL, http.StatusFound)
-
 }
