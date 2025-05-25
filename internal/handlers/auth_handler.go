@@ -95,7 +95,7 @@ func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
+	SameSite: http.SameSiteNoneMode,
 		Domain:   ".privycode.com",
 		// Expires:  time.Now().Add(72 * time.Hour),
 	})
