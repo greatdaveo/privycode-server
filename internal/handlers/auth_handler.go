@@ -93,7 +93,7 @@ func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		Name:     "github_token",
 		Value:    token.AccessToken,
 		Path:     "/",
-		HttpOnly: false,
+		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
 		Domain:   ".privycode.com",
