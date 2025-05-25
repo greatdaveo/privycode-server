@@ -88,17 +88,17 @@ func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// To set cookie with the token
-	http.SetCookie(w, &http.Cookie{
-		Name:     "github_token",
-		Value:    token.AccessToken,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   true,
-	SameSite: http.SameSiteNoneMode,
-		Domain:   ".privycode.com",
-		// Expires:  time.Now().Add(72 * time.Hour),
-	})
+	// // To set cookie with the token
+	// http.SetCookie(w, &http.Cookie{
+	// 	Name:     "github_token",
+	// 	Value:    token.AccessToken,
+	// 	Path:     "/",
+	// 	HttpOnly: true,
+	// 	Secure:   true,
+	// SameSite: http.SameSiteNoneMode,
+	// 	Domain:   ".privycode.com",
+	// 	// Expires:  time.Now().Add(72 * time.Hour),
+	// })
 
 	// To redirect to the frontend dashboard without exposing token
 	frontendURL := os.Getenv("FRONTEND_URL")
@@ -107,9 +107,8 @@ func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		frontendURL = "http://localhost:5173"
 	}
 
-	redirectURL := fmt.Sprintf("%s/dashboard", frontendURL)
-
+	redirectURL := fmt.Sprintf("%s/dashboard?token=%s", frontendURL, token.AccessToken)
+	
 	fmt.Printf("🔄 Redirecting user to: %s\n", redirectURL)
-
 	http.Redirect(w, r, redirectURL, http.StatusFound)
 }
