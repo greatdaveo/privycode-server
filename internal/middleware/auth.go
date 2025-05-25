@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/greatdaveo/privycode-server/config"
@@ -17,12 +18,14 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("github_token")
 		if err != nil || cookie.Value == "" {
+			fmt.Println("❌ No cookie found")
 			http.Error(w, "❌ Unauthorized: Missing token", http.StatusUnauthorized)
 			return
 		}
 
+		fmt.Println("✅ Found cookie:", cookie.Value)
 		token := cookie.Value
-		
+
 		var user models.User
 		// fmt.Println("user", user)
 
