@@ -3,7 +3,6 @@ package middleware
 import (
 	"context"
 	"net/http"
-	"strings"
 
 	"github.com/greatdaveo/privycode-server/config"
 	"github.com/greatdaveo/privycode-server/internal/models"
@@ -16,13 +15,14 @@ const userCtxKey = contextKey("user")
 // To extract user from Authorization header
 func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		authHeader := r.Header.Get("Authorization")
-
-		if !strings.HasPrefix(authHeader, "Bearer") {
-			http.Error(w, "❌ Unauthorized: Missed token", http.StatusUnauthorized)
+		cookie, err := r.Cookie("github_token")
+		if err != nil || cookie.Value == "" {
+			http.Error(w, "❌ Unauthorized: Missing token", http.StatusUnauthorized)
+			return
 		}
 
-		token := strings.TrimPrefix(authHeader, "Bearer ")
+		token := cookie.Value
+		
 		var user models.User
 		// fmt.Println("user", user)
 

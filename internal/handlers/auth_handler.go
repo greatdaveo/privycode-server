@@ -96,6 +96,8 @@ func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: false,
 		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
+		Domain:   ".privycode.com",
+		// Expires:  time.Now().Add(72 * time.Hour),
 	})
 
 	// To redirect to the frontend dashboard without exposing token
