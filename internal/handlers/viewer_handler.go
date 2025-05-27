@@ -176,7 +176,7 @@ func ViewFileHandler(w http.ResponseWriter, r *http.Request) {
 	segments := strings.Split(strings.TrimPrefix(r.URL.Path, "/view-files/"), "/")
 
 	if len(segments) < 1 {
-		http.Error(w, "Invalid viewer URL", http.StatusBadRequest)
+		http.Error(w, "❌ Invalid viewer URL", http.StatusBadRequest)
 		return
 	}
 
@@ -193,16 +193,22 @@ func ViewFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	dbInstance := config.DB
 
-	// To get the viewer link
+	// To get the viewer link (including soft-deleted link)
 	var link models.ViewerLink
-	if err := dbInstance.Where("token = ?", token).First(&link).Error; err != nil {
-		http.Error(w, "❌ Invalid link", http.StatusNotFound)
+	if err := dbInstance.Unscoped().Where("token = ?", token).First(&link).Error; err != nil {
+		http.Error(w, "❌ Invalid link or deleted link", http.StatusNotFound)
+		return
+	}
+
+	// To check if the link has been soft deleted
+	if link.DeletedAt.Valid {
+		http.Error(w, "❌ This link has been deleted", http.StatusGone)
 		return
 	}
 
 	// To check expiration
 	if time.Now().After(link.ExpiresAt) {
-		http.Error(w, "❌ Link expired", http.StatusForbidden)
+		http.Error(w, "❌ This link has expired", http.StatusForbidden)
 		return
 	}
 	// To check view limits
