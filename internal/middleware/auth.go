@@ -14,7 +14,6 @@ type contextKey string
 const userCtxKey = contextKey("user")
 
 // To extract user from Authorization header
-// middleware/auth.go
 func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")

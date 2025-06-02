@@ -1,19 +1,20 @@
 
 # 🔐 PrivyCode
 
-PrivyCode is a secure platform that allows developers to share **read-only access to their private GitHub repositories** with recruiters or collaborators — without making them public or exposing secrets.
+This is the **Go backend** of the PrivyCode project.
+
+PrivyCode is a secure platform that allows developers to share **read-only access to their private GitHub repositories** with recruiters or collaborators - without making them public or exposing secrets.
 
 ---
 
 ## 🚀 Features
 
-- 🔗 Generate expiring viewer links to private GitHub repositories
-- 👁️ Allow recruiters to browse your code — no GitHub login required
-- ✂️ Read-only access — no forking or editing
-- 📦 Track view limits and expiration per link
-- 🧑‍💻 Developer dashboard to manage links
-- 🔄 Light/dark theme support
-- 📝 Copy, edit, delete links with ease
+- Generate expiring viewer links to private GitHub repositories
+- Allow recruiters to browse your code - no GitHub login required
+- Read-only access - no forking or editing
+- Track view limits and expiration per link
+- Developer dashboard to manage links
+- Copy, edit, delete links with ease
 
 ---
 
@@ -28,7 +29,7 @@ PrivyCode is a secure platform that allows developers to share **read-only acces
 ---
 
 ## 🖼️ Live Demo
-[privycode.com](https://privycode.com)
+[https://privycode.com](https://privycode.com)
 
 ---
 
@@ -43,20 +44,27 @@ PrivyCode is a secure platform that allows developers to share **read-only acces
 ## 🔧 Getting Started
 
 ```bash
+# Clone the repository
 git clone https://github.com/greatdaveo/privycode-server 
 cd privycode-server
+
+# Install dependencies
 go mod tidy
+
+# Run the server
 go run main.go
 ````
-
-Create a `.env` file with:
+Create a `.env` file in the project root:
 
 ```
+PORT=8080
+DATABASE_URL=your_postgres_url
 GITHUB_CLIENT_ID=your_client_id
 GITHUB_CLIENT_SECRET=your_client_secret
 GITHUB_CALLBACK_URL=http://localhost:8080/github/callback
-DATABASE_URL=your_postgres_url
-GO_ENV=development
+GO_ENV=development # For Production only
+FRONTEND_URL=http://localhost:5173 or your frontend url
+
 ```
 
 ---
@@ -73,27 +81,27 @@ GO_ENV=development
 
 ---
 
-### 📋 Viewer Links (auth required)
+### 📋 Viewer Links (Auth Required)
 
 | Method | Endpoint           | Description                       |
 | ------ | ------------------ | --------------------------------- |
 | GET    | `/dashboard`       | Get all viewer links for the user |
 | POST   | `/generate-link`   | Create a new viewer link          |
-| PUT    | `/update-link/:id` | Update a viewer link's limits     |
-| DELETE | `/delete-link/:id` | Delete (soft) a viewer link       |
+| PUT    | `/update-link/:id` | Update an existing viewer link    |
+| DELETE | `/delete-link/:id` | Soft delete a viewer link         |
 
 ---
 
-### 🌐 Public Access
+### 🌐 Public Access (No Auth Required)
 
 | Method | Endpoint                        | Description                        |
 | ------ | ------------------------------- | ---------------------------------- |
 | GET    | `/view/:token`                  | View repo contents (public access) |
-| GET    | `/view-files/:token/file?path=` | View specific file content         |
-| GET    | `/view-folder/:token?path=`     | Browse inside subfolders           |
-| GET    | `/view-info/:token`             | Get repo + owner info for header   |
+| GET    | `/view-files/:token/file?path=` | View a specific file content       |
+| GET    | `/view-folder/:token?path=`     | Browse inside folders & subfolders |
+| GET    | `/view-info/:token`             | Get repo & owner info for display  |
 
-> ✅ Recruiters only need the `/view/:token` link — no login required.
+> ✅ Recruiters only need the `/view/:token` link - no login required.
 
 ---
 
@@ -126,17 +134,14 @@ type ViewerLink struct {
 
 ---
 
-
-## ✅ Future Improvements
-
-* Analytics per link (view history, time opened)
-* AI-powered repo summaries
-* GitHub repo insights integration
+## 🤝 Contributing
+Contributions are welcome!
+If you'd like to suggest features or report bugs, feel free to fork the project, open an issue and possibly submit a pull request.
 
 ---
 
 ## 👨‍💻 Developed By
-> Olowomeye David [GitHub](https://github.com/greatdaveo)
+> Olowomeye David [GitHub](https://github.com/greatdaveo) [LinkedIn](https://linkedin.com/in/greatdaveo)
 
 ---
 

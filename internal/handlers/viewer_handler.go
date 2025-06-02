@@ -22,7 +22,6 @@ type ViewerLinkRequest struct {
 }
 
 func GenerateViewerLinkHandler(w http.ResponseWriter, r *http.Request) {
-	// Temp User ID
 	user := middleware.GetUserFromContext(r)
 	// fmt.Println("User: ", user)
 
