@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/greatdaveo/privycode-server/config"
@@ -15,6 +16,11 @@ import (
 
 func GitHubLoginHandler(w http.ResponseWriter, r *http.Request) {
 	state := uuid.New().String()
+	// If this request is coming from a mobile client add a marker so we can
+	// identify it later in the callback.
+	if r.URL.Query().Get("mobile") == "true" {
+		state = "mobile-" + state
+	}
 	url := github.GetAuthURL(state)
 	http.Redirect(w, r, url, http.StatusFound)
 }
@@ -88,27 +94,29 @@ func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// // To set cookie with the token
-	// http.SetCookie(w, &http.Cookie{
-	// 	Name:     "github_token",
-	// 	Value:    token.AccessToken,
-	// 	Path:     "/",
-	// 	HttpOnly: true,
-	// 	Secure:   true,
-	// SameSite: http.SameSiteNoneMode,
-	// 	Domain:   ".privycode.com",
-	// 	// Expires:  time.Now().Add(72 * time.Hour),
-	// })
+	// Determine if this flow originated from a mobile client by inspecting the
+	// state parameter GitHub sent back.
+	isMobile := strings.HasPrefix(r.URL.Query().Get("state"), "mobile-")
 
-	// To redirect to the frontend dashboard without exposing token
+	// Base URL defaults
 	frontendURL := os.Getenv("FRONTEND_URL")
-
 	if frontendURL == "" {
 		frontendURL = "http://localhost:5173"
 	}
 
+	if isMobile {
+		mobileURL := os.Getenv("MOBILE_URL")
+		if mobileURL == "" {
+			mobileURL = frontendURL // fallback to frontend/localhost
+		}
+
+		redirectURL := fmt.Sprintf("%s?token=%s", mobileURL, token.AccessToken)
+		fmt.Printf("🔄 Redirecting mobile user to: %s\n", redirectURL)
+		http.Redirect(w, r, redirectURL, http.StatusFound)
+		return
+	}
+
 	redirectURL := fmt.Sprintf("%s/dashboard?token=%s", frontendURL, token.AccessToken)
-	
 	fmt.Printf("🔄 Redirecting user to: %s\n", redirectURL)
 	http.Redirect(w, r, redirectURL, http.StatusFound)
 }
