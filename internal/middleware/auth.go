@@ -19,7 +19,7 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		authHeader := r.Header.Get("Authorization")
 
 		if !strings.HasPrefix(authHeader, "Bearer ") {
-			http.Error(w, "❌ Unauthorized: Missing token", http.StatusUnauthorized)
+			http.Error(w, "Unauthorized: Missing token", http.StatusUnauthorized)
 			return
 		}
 
@@ -27,7 +27,7 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 		var user models.User
 		if err := config.DB.Where("git_hub_token = ?", token).First(&user).Error; err != nil {
-			http.Error(w, "❌ Unauthorized: Invalid token", http.StatusUnauthorized)
+			http.Error(w, "Unauthorized: Invalid token", http.StatusUnauthorized)
 			return
 		}
 

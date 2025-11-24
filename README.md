@@ -1,4 +1,3 @@
-
 # 🔐 PrivyCode
 
 This is the **Go backend** of the PrivyCode project.
@@ -20,15 +19,16 @@ PrivyCode is a secure platform that allows developers to share **read-only acces
 
 ## 🧰 Tech Stack
 
-| Frontend               | Backend              | Database      |
-|------------------------|----------------------|---------------|
-| React + TypeScript     | Go (net/http + GORM) | PostgreSQL    |
-| TailwindCSS            | GitHub OAuth2 API    |               |
-| Monaco Editor          | JWT-style token auth |               |
+| Frontend           | Backend              | Database   |
+| ------------------ | -------------------- | ---------- |
+| React + TypeScript | Go (net/http + GORM) | PostgreSQL |
+| TailwindCSS        | GitHub OAuth2 API    |            |
+| Monaco Editor      | JWT-style token auth |            |
 
 ---
 
 ## 🖼️ Live Demo
+
 [https://privycode.com](https://privycode.com)
 
 ---
@@ -45,7 +45,7 @@ PrivyCode is a secure platform that allows developers to share **read-only acces
 
 ```bash
 # Clone the repository
-git clone https://github.com/greatdaveo/privycode-server 
+git clone https://github.com/greatdaveo/privycode-server
 cd privycode-server
 
 # Install dependencies
@@ -53,7 +53,8 @@ go mod tidy
 
 # Run the server
 go run main.go
-````
+```
+
 Create a `.env` file in the project root:
 
 ```
@@ -101,7 +102,7 @@ FRONTEND_URL=http://localhost:5173 or your frontend url
 | GET    | `/view-folder/:token?path=`     | Browse inside folders & subfolders |
 | GET    | `/view-info/:token`             | Get repo & owner info for display  |
 
-> ✅ Recruiters only need the `/view/:token` link - no login required.
+> Recruiters only need the `/view/:token` link - no login required.
 
 ---
 
@@ -135,14 +136,18 @@ type ViewerLink struct {
 ---
 
 ## 🤝 Contributing
+
 Contributions are welcome!
 If you'd like to suggest features or report bugs, feel free to fork the project, open an issue and possibly submit a pull request.
 
 ---
 
 ## 👨‍💻 Developed By
+
 > Olowomeye David [GitHub](https://github.com/greatdaveo) [LinkedIn](https://linkedin.com/in/greatdaveo)
 
 ---
+
+```
 
 ```

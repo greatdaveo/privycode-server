@@ -20,29 +20,29 @@ func ConnectDB() {
 		err := godotenv.Load()
 
 		if err != nil {
-			log.Fatal("❌ Error loading .env file")
+			log.Fatal("Error loading .env file")
 		}
 	}
 
 	dsn := os.Getenv("DATABASE_URL")
 	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("❌ Error connecting to DB: %v", err)
+		log.Fatalf("Error connecting to DB: %v", err)
 	}
 
 	// To verify the connection pinging
 	sqlDB, err := database.DB()
 	if err != nil {
-		log.Fatalf("❌ Error getting raw DB handle: %v", err)
+		log.Fatalf("Error getting raw DB handle: %v", err)
 	}
 
 	if err := sqlDB.Ping(); err != nil {
-		log.Fatalf("❌ Error pinging DB: %v", err)
+		log.Fatalf("Error pinging DB: %v", err)
 	}
 
 	DB = database
 
-	fmt.Println("Connected to PostgreSQL successfully!!! ✅")
+	fmt.Println("Connected to PostgreSQL successfully!!! ")
 
 }
 
@@ -50,6 +50,6 @@ func RunMigrations() {
 
 	DB.AutoMigrate(&models.User{}, &models.ViewerLink{})
 
-	fmt.Println("Migrations completed successfully ✅")
+	fmt.Println("Migrations completed successfully ")
 
 }

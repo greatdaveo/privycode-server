@@ -30,11 +30,11 @@ func main() {
 		port = "8080"
 	}
 
-	log.Printf("Server starting on :%s... ✅", port)
+	log.Printf("Server starting on :%s... ", port)
 
 	err := http.ListenAndServe(":"+port, handlerWithCORS)
 
 	if err != nil {
-		log.Fatalf("❌ Could not start sever: %v", err)
+		log.Fatalf("Could not start sever: %v", err)
 	}
 }

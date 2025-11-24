@@ -26,14 +26,14 @@ func GenerateViewerLinkHandler(w http.ResponseWriter, r *http.Request) {
 	// fmt.Println("User: ", user)
 
 	if user == nil {
-		http.Error(w, "❌ Unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
 	var req ViewerLinkRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil || req.RepoName == "" {
-		http.Error(w, "❌ Invalid input", http.StatusBadRequest)
+		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
 
@@ -64,12 +64,12 @@ func GenerateViewerLinkHandler(w http.ResponseWriter, r *http.Request) {
 	resp, err := client.Do(reqGitHub)
 
 	if err != nil || resp.StatusCode != 200 {
-		http.Error(w, "❌ Repository not found or inaccessible", http.StatusNotFound)
+		http.Error(w, "Repository not found or inaccessible", http.StatusNotFound)
 		return
 	}
 
 	if err := config.DB.Create(&link).Error; err != nil {
-		http.Error(w, "❌ Could not create viewer link", http.StatusInternalServerError)
+		http.Error(w, "Could not create viewer link", http.StatusInternalServerError)
 	}
 
 	viewerURL := fmt.Sprintf("http://localhost:8080/view/%s", token)
@@ -93,19 +93,19 @@ func ViewerAccessHandler(w http.ResponseWriter, r *http.Request) {
 
 	result := dbInstance.Where("token = ?", token).First(&link)
 	if result.Error != nil {
-		http.Error(w, "❌ Invalid or expired link", http.StatusNotFound)
+		http.Error(w, "Invalid or expired link", http.StatusNotFound)
 		return
 	}
 
 	// To check if the link has expired
 	if time.Now().After(link.ExpiresAt) {
-		http.Error(w, "❌ Link has expired", http.StatusForbidden)
+		http.Error(w, "Link has expired", http.StatusForbidden)
 		return
 	}
 
 	// To check the max views (Optional)
 	if link.MaxViews > 0 && link.ViewCount >= link.MaxViews {
-		http.Error(w, "❌ View limit reached", http.StatusForbidden)
+		http.Error(w, "View limit reached", http.StatusForbidden)
 		return
 	}
 
@@ -117,7 +117,7 @@ func ViewerAccessHandler(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	err := dbInstance.First(&user, link.UserID).Error
 	if err != nil {
-		http.Error(w, "❌ User not found", http.StatusInternalServerError)
+		http.Error(w, "User not found", http.StatusInternalServerError)
 		return
 	}
 
@@ -129,7 +129,7 @@ func ViewerAccessHandler(w http.ResponseWriter, r *http.Request) {
 
 	req, err := http.NewRequest("GET", apiURL, nil)
 	if err != nil {
-		http.Error(w, "❌ Failed to build request", http.StatusInternalServerError)
+		http.Error(w, "Failed to build request", http.StatusInternalServerError)
 		return
 	}
 
@@ -139,7 +139,7 @@ func ViewerAccessHandler(w http.ResponseWriter, r *http.Request) {
 	// To send the request
 	resp, err := client.Do(req)
 	if err != nil {
-		http.Error(w, "❌ HTTP error: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "HTTP error: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -160,7 +160,7 @@ func ViewerAccessHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&contents); err != nil {
-		http.Error(w, "❌ Failed to parse GitHub response", http.StatusInternalServerError)
+		http.Error(w, "Failed to parse GitHub response", http.StatusInternalServerError)
 		return
 	}
 
@@ -168,14 +168,14 @@ func ViewerAccessHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(contents)
 
-	// fmt.Fprintf(w, "✅ Access granted to repo: %s", link.RepoName)
+	// fmt.Fprintf(w, "Access granted to repo: %s", link.RepoName)
 }
 
 func ViewFileHandler(w http.ResponseWriter, r *http.Request) {
 	segments := strings.Split(strings.TrimPrefix(r.URL.Path, "/view-files/"), "/")
 
 	if len(segments) < 1 {
-		http.Error(w, "❌ Invalid viewer URL", http.StatusBadRequest)
+		http.Error(w, "Invalid viewer URL", http.StatusBadRequest)
 		return
 	}
 
@@ -186,7 +186,7 @@ func ViewFileHandler(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Query().Get("path")
 
 	if token == "" || path == "" {
-		http.Error(w, "❌ Missing token or path", http.StatusBadRequest)
+		http.Error(w, "Missing token or path", http.StatusBadRequest)
 		return
 	}
 
@@ -195,30 +195,30 @@ func ViewFileHandler(w http.ResponseWriter, r *http.Request) {
 	// To get the viewer link (including soft-deleted link)
 	var link models.ViewerLink
 	if err := dbInstance.Unscoped().Where("token = ?", token).First(&link).Error; err != nil {
-		http.Error(w, "❌ Invalid link or deleted link", http.StatusNotFound)
+		http.Error(w, "Invalid link or deleted link", http.StatusNotFound)
 		return
 	}
 
 	// To check if the link has been soft deleted
 	if link.DeletedAt.Valid {
-		http.Error(w, "❌ This link has been deleted", http.StatusGone)
+		http.Error(w, "This link has been deleted", http.StatusGone)
 		return
 	}
 
 	// To check expiration
 	if time.Now().After(link.ExpiresAt) {
-		http.Error(w, "❌ This link has expired", http.StatusForbidden)
+		http.Error(w, "This link has expired", http.StatusForbidden)
 		return
 	}
 	// To check view limits
 	if link.MaxViews > 0 && link.ViewCount >= link.MaxViews {
-		http.Error(w, "❌ View limit reached", http.StatusForbidden)
+		http.Error(w, "View limit reached", http.StatusForbidden)
 		return
 	}
 
 	var user models.User
 	if err := dbInstance.First(&user, link.UserID).Error; err != nil {
-		http.Error(w, "❌ User not found", http.StatusInternalServerError)
+		http.Error(w, "User not found", http.StatusInternalServerError)
 		return
 	}
 
@@ -233,7 +233,7 @@ func ViewFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil || response.StatusCode != 200 {
 		body, _ := io.ReadAll(response.Body)
-		http.Error(w, fmt.Sprintf("❌ GitHub error: %s", body), response.StatusCode)
+		http.Error(w, fmt.Sprintf("GitHub error: %s", body), response.StatusCode)
 		return
 	}
 
@@ -328,7 +328,7 @@ func UpdateViewerLinkHandler(w http.ResponseWriter, r *http.Request) {
 	idStr := strings.TrimPrefix(r.URL.Path, "/update-link/")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "❌ Invalid ID", http.StatusBadRequest)
+		http.Error(w, "Invalid ID", http.StatusBadRequest)
 		return
 	}
 
@@ -336,7 +336,7 @@ func UpdateViewerLinkHandler(w http.ResponseWriter, r *http.Request) {
 
 	db := config.DB
 	if err := db.First(&link, id).Error; err != nil {
-		http.Error(w, "❌ Link not found", http.StatusNotFound)
+		http.Error(w, "Link not found", http.StatusNotFound)
 		return
 	}
 
@@ -346,7 +346,7 @@ func UpdateViewerLinkHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		http.Error(w, "❌ Invalid JSON payload", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON payload", http.StatusBadRequest)
 		return
 	}
 
@@ -359,7 +359,7 @@ func UpdateViewerLinkHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := db.Save(&link).Error; err != nil {
-		http.Error(w, "❌ Could not update link", http.StatusInternalServerError)
+		http.Error(w, "Could not update link", http.StatusInternalServerError)
 		return
 	}
 
@@ -374,19 +374,19 @@ func DeleteViewerLinkHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(idStr)
 
 	if err != nil {
-		http.Error(w, "❌ Invalid ID", http.StatusBadRequest)
+		http.Error(w, "Invalid ID", http.StatusBadRequest)
 		return
 	}
 
 	var link models.ViewerLink
 	db := config.DB
 	if err := db.First(&link, id).Error; err != nil {
-		http.Error(w, "❌ Link not found", http.StatusNotFound)
+		http.Error(w, "Link not found", http.StatusNotFound)
 		return
 	}
 
 	if err := db.Delete(&link).Error; err != nil {
-		http.Error(w, "❌  Could not delete link", http.StatusInternalServerError)
+		http.Error(w, " Could not delete link", http.StatusInternalServerError)
 		return
 	}
 

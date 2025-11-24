@@ -34,7 +34,7 @@ func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	token, err := github.ExchangeCodeForToken(code)
 	if err != nil {
-		http.Error(w, "❌ Failed to exchange code: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to exchange code: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -42,7 +42,7 @@ func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	client := github.GetGitHubOAuthConfig().Client(r.Context(), token)
 	response, err := client.Get("https://api.github.com/user")
 	if err != nil {
-		http.Error(w, "❌ Failed to fetch user: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to fetch user: "+err.Error(), http.StatusInternalServerError)
 	}
 
 	defer response.Body.Close()
@@ -55,7 +55,7 @@ func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(response.Body).Decode(&githubUser)
 
 	if githubUser.Login == "" {
-		http.Error(w, "❌ Invalid GitHub response", http.StatusInternalServerError)
+		http.Error(w, "Invalid GitHub response", http.StatusInternalServerError)
 		return
 	}
 
@@ -80,7 +80,7 @@ func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err := dbInstance.Create(&newUser).Error; err != nil {
-			http.Error(w, "❌ Failed to create user", http.StatusInternalServerError)
+			http.Error(w, "Failed to create user", http.StatusInternalServerError)
 			return
 		}
 
@@ -90,7 +90,7 @@ func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		existingUser.GitHubToken = token.AccessToken
 		dbInstance.Save(&existingUser)
 	} else {
-		http.Error(w, "❌ Database error: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Database error: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
