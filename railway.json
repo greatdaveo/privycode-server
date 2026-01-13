@@ -1,0 +1,6 @@
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "project": "a4937608-3ed2-4de0-95a9-27e1f0972b99",
+  "service": "heroic-expression",
+  "environment": "production"
+}
